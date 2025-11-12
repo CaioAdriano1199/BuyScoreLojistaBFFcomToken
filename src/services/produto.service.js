@@ -50,6 +50,22 @@ export const removerProdutoService = async (id, token) => {
   }
 };
 
+export const meusProdutosService = async (token) => {
+  try {
+    const response = await axios.get(`${API_URL}/meusprodutos`, {
+      headers: {
+        Authorization: token?.startsWith('Bearer ') ? token : `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao listar produtos:", error.message);
+    throw {
+      status: error.response?.status || 500,
+      mensagem: error.response?.data?.mensagem || error.response?.data?.message || "Erro na comunicação com a API",
+    };
+  }
+};
 export const listarProdutosService = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/all`, {

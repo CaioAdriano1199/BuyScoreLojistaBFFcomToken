@@ -4,7 +4,8 @@ import { produtoIDService,
     ativarProdutoService,
     desativarProdutoService,
     atualizarProdutoService, 
-    criarProdutoService
+    criarProdutoService,
+    meusProdutosService
 } from "../services/produto.service.js";
 
 export const produtoIDController = async (req, res) => {
@@ -92,6 +93,35 @@ export const listarProdutosController = async (req, res) => {
 
   try {
     const produtos = await listarProdutosService(token);
+
+    return res.status(200).json({
+      sucesso: true,
+      produtos,
+    });
+  } catch (error) {
+    console.error('Erro no listarProdutosController:', error);
+    const status = error.status || 500;
+    if (status === 403) {
+      return res.status(403).json({
+        sucesso: false,
+        mensagem: "Acesso negado. Verifique suas permissões ou token de autenticação.",
+      });
+    }
+    return res.status(status).json({
+      sucesso: false,
+      mensagem: error.mensagem || "Erro interno no BFF",
+    });
+  }
+};
+export const meusProdutosController = async (req, res) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ sucesso: false, mensagem: "Token não enviado" });
+  }
+
+  try {
+    const produtos = await meusProdutosController(token);
 
     return res.status(200).json({
       sucesso: true,

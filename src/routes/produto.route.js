@@ -5,7 +5,8 @@ import { produtoIDController,
     ativarProdutoController,
     desativarProdutoController,
     atualizarProdutoController,
-    criarProdutoController
+    criarProdutoController,
+    meusProdutosController
  } from "../controllers/produto.controller.js";
 
 const router = express.Router();
@@ -15,6 +16,8 @@ router.get("/:id", produtoIDController);
 router.delete("/:id", removerProdutoController);
 
 router.get("/all", listarProdutosController);
+
+router.get("/meuprod", meusProdutosController);
 
 router.put("/ativar/:id", ativarProdutoController);
 
