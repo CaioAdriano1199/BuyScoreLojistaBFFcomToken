@@ -11,10 +11,6 @@ import { produtoIDController,
 
 const router = express.Router();
 
-router.get("/:id", produtoIDController);
-
-router.delete("/:id", removerProdutoController);
-
 router.get("/all", listarProdutosController);
 
 router.get("/meuprod", meusProdutosController);
@@ -26,5 +22,9 @@ router.put("/desativar/:id", desativarProdutoController);
 router.put("/", atualizarProdutoController);
 
 router.post("/", criarProdutoController);
+
+router.delete("/:id", removerProdutoController);
+
+router.get("/:id", produtoIDController);
 
 export default router;

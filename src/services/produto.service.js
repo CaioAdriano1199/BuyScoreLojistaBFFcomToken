@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_URL = process.env.API_PRODUTO_URL || "http://localhost:8081/produto";
 
+//bff testado
 export const produtoIDService = async (id, token) => {
   if (!id) {
     throw {
@@ -26,6 +27,7 @@ export const produtoIDService = async (id, token) => {
   }
 };
 
+//bff testado
 export const removerProdutoService = async (id, token) => {
   if (!id) {
     throw {
@@ -50,6 +52,7 @@ export const removerProdutoService = async (id, token) => {
   }
 };
 
+//bff testado
 export const meusProdutosService = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/meusprodutos`, {
@@ -66,6 +69,8 @@ export const meusProdutosService = async (token) => {
     };
   }
 };
+
+//bff testado
 export const listarProdutosService = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/all`, {
@@ -83,6 +88,7 @@ export const listarProdutosService = async (token) => {
   }
 };
 
+//bff testado
 export const ativarProdutoService = async (id, token) => {
   if (!id) {
     throw {
@@ -107,6 +113,7 @@ export const ativarProdutoService = async (id, token) => {
   }
 };
 
+//bff testado
 export const desativarProdutoService = async (id, token) => {
   if (!id) {
     throw {
@@ -131,6 +138,7 @@ export const desativarProdutoService = async (id, token) => {
   }
 };
 
+//bff testado mas tirar duvidas
 export const atualizarProdutoService = async (produto, token) => {
   if (!produto || Object.keys(produto).length === 0) {
     throw {
@@ -156,23 +164,33 @@ export const atualizarProdutoService = async (produto, token) => {
   }
 };
 
-
+//bff testado
 export const criarProdutoService = async (body, token) => {
   try {
+
+    const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+
     const response = await axios.post(`${API_URL}`, body, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: authHeader,
         "Content-Type": "application/json",
       },
     });
 
-    return response.data;
+    return {
+      produto: response.data,
+    };
   } catch (error) {
     console.error("Erro ao chamar API de produto:", error.message);
+    console.error("Status:", error.response?.status);
+    console.error("Dados do erro:", error.response?.data);
+
     throw {
-      status: error.response?.status,
+      status: error.response?.status || 500,
       mensagem:
-        error.response?.data?.mensagem || "Erro na comunicação com a API",
+        error.response?.data?.mensagem ||
+        error.response?.data?.message ||
+        "Erro na comunicação com a API",
     };
   }
 };

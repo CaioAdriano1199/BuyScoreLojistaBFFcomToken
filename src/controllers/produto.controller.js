@@ -113,6 +113,7 @@ export const listarProdutosController = async (req, res) => {
     });
   }
 };
+
 export const meusProdutosController = async (req, res) => {
   const token = req.headers.authorization;
 
@@ -121,7 +122,7 @@ export const meusProdutosController = async (req, res) => {
   }
 
   try {
-    const produtos = await meusProdutosController(token);
+    const produtos = await meusProdutosService(token);
 
     return res.status(200).json({
       sucesso: true,
@@ -262,22 +263,33 @@ export const criarProdutoController = async (req, res) => {
   const body = req.body;
   const token = req.headers.authorization;
 
+  if (!body || !body.nome) {
+    return res
+      .status(400)
+      .json({ sucesso: false, mensagem: "O corpo da requisição não pode estar vazio" });
+  }
+
   if (!token) {
-    return res.status(401).json({
-      sucesso: false,
-      mensagem: "Token não fornecido",
-    });
+    return res.status(401).json({ sucesso: false, mensagem: "Token não enviado" });
   }
 
   try {
-    const produto = await criarProdutoService(body, token);
+    const data = await criarProdutoService(body, token);
 
-    return res.status(200).json({
-      sucesso: true,
-      produto,
-    });
+    return res.json({ sucesso: true, ...data });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    console.error("Erro no criarProdutoController:", error);
+
+    const status = error.status || 500;
+    if (status === 403) {
+      return res.status(403).json({
+        sucesso: false,
+        mensagem:
+          "Acesso negado. Verifique suas permissões ou token de autenticação.",
+      });
+    }
+
+    return res.status(status).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
