@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8081/ponto";
 
+//bff testado
 export const criarpontosService = async (pontos, token) => {
     try {
         const response = await axios.post(`${API_URL}/criarponto`, { pontos }, { 
@@ -26,6 +27,7 @@ export const criarpontosService = async (pontos, token) => {
     }
 };
 
+//bff testado
 export const resgatarPontosPorCodigoService = async (codigo, token) => {
   try {
     const response = await axios.get(`${API_URL}/codigo/${codigo}`, {

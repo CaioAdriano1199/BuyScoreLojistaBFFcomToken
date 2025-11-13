@@ -138,7 +138,7 @@ export const desativarProdutoService = async (id, token) => {
   }
 };
 
-//bff testado mas tirar duvidas
+//bff testado
 export const atualizarProdutoService = async (produto, token) => {
   if (!produto || Object.keys(produto).length === 0) {
     throw {

@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8081/auth/login";
 
+//bff testado
 export const loginService = async (email, senha) => {
   try {
     const response = await axios.post(API_URL, { email, senha });

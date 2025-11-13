@@ -2,47 +2,40 @@ import axios from "axios";
 
 const API_URL = process.env.API_COMERCIO_URL || "http://localhost:8081/comercio";
 
-export const buscarComercioPorIdService = async (id) => {
+//bff testado
+export const buscarComercioPorIdService = async (id, token) => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const response = await axios.get(`${API_URL}/${id}`, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 
     return response.data;
   } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
-
+    console.error("Erro ao chamar API buscarComercioPorId:", error.message);
     throw {
       status: error.response?.status,
-      mensagem:
-        error.response?.data?.mensagem || "Erro na comunicação com a API",
+      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
 
+//bff testado
 export const criarComercioService = async (payload) => {
   try {
-    const response = await axios.post(API_URL, payload);
+    const response = await axios.post(API_URL, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     return {
       token: response.data?.token,
     };
   } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
-
-    throw {
-      status: error.response?.status,
-      mensagem:
-        error.response?.data?.mensagem || "Erro na comunicação com a API",
-    };
-  }
-};
-
-export const listarTodosComerciosService = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/all`);
-    return response.data; // Lista de Comercio
-  } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
-
+    console.error("Erro ao chamar API criarComercio:", error.message);
     throw {
       status: error.response?.status,
       mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
@@ -50,13 +43,19 @@ export const listarTodosComerciosService = async () => {
   }
 };
 
-export const top5ComerciosPorSetorService = async (seguimento) => {
+//bff testado
+export const listarTodosComerciosService = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/top5/setor/${seguimento}`);
+    const response = await axios.get(`${API_URL}/all`, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     return response.data;
   } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
-
+    console.error("Erro ao chamar API listarTodosComercios:", error.message);
     throw {
       status: error.response?.status,
       mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
@@ -64,13 +63,19 @@ export const top5ComerciosPorSetorService = async (seguimento) => {
   }
 };
 
-export const top5SetoresPrincipaisService = async () => {
+//bff testado
+export const top5ComerciosPorSetorService = async (seguimento, token) => {
   try {
-    const response = await axios.get(`${API_URL}/top5/setores-principais`);
+    const response = await axios.get(`${API_URL}/top5/setor/${seguimento}`, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     return response.data;
   } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
-
+    console.error("Erro ao chamar API top5ComerciosPorSetor:", error.message);
     throw {
       status: error.response?.status,
       mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
@@ -78,13 +83,19 @@ export const top5SetoresPrincipaisService = async () => {
   }
 };
 
-export const top5CadaSetorService = async () => {
+//testar novamente depois de fazer uma compra
+export const top5SetoresPrincipaisService = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/top5/cada-setor`);
+    const response = await axios.get(`${API_URL}/top5/setores-principais`, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
     return response.data;
   } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
-
+    console.error("Erro ao chamar API top5SetoresPrincipais:", error.message);
     throw {
       status: error.response?.status,
       mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
@@ -92,13 +103,44 @@ export const top5CadaSetorService = async () => {
   }
 };
 
+//testar novamente depois de fazer uma compra
+export const top5CadaSetorService = async (token) => {
+  try {
+    const response = await axios.get(`${API_URL}/top5/cada-setor`, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao chamar API top5CadaSetor:", error.message);
+    throw {
+      status: error.response?.status,
+      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
+    };
+  }
+};
+
+//bff dando problema, verificar a api depois
 export const top5MultiplosSetoresService = async (setores) => {
   try {
-    const queryString = setores.map(s => `setores[]=${encodeURIComponent(s)}`).join('&');
-    const response = await axios.get(`${API_URL}/top5/setores?${queryString}`);
+    // 🔹 Converte array em string separada por vírgulas, ex: "Eletrônicos,string"
+    const setoresParam = setores.join(',');
+
+    const response = await axios.get(`${API_URL}/top5/setores`, {
+      params: { setores: setoresParam },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     return response.data;
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
+    console.error("Status:", error.response?.status);
+    console.error("Detalhes:", error.response?.data);
 
     throw {
       status: error.response?.status,
@@ -106,3 +148,5 @@ export const top5MultiplosSetoresService = async (setores) => {
     };
   }
 };
+
+

@@ -1,8 +1,9 @@
-import { atualizarClienteService,
-  CadastroService,
+import {
+  atualizarClienteService,
   checkFavoritoService,
   checkProdutoFavoritoService,
   removerClienteService,
+  CadastroService,
   removerProdutoFavoritoService,
   adicionarFavoritoService,
   adicionarProdutoFavoritoService,
@@ -10,36 +11,16 @@ import { atualizarClienteService,
   listarProdutosFavoritosService,
   removerFavoritoService,
   allclienteService,
-  clienteIDService  } from "../services/cliente.service.js";
+  clienteIDService,
+} from "../services/cliente.service.js";
 
-export const atualizarClienteController = async (req, res) => {
-  const { id } = req.params;
-  const body = req.body;
-
-  if (!id) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "ID não fornecido",
-    });
+const verificarToken = (req, res) => {
+  const token = req.headers.authorization;
+  if (!token) {
+    res.status(401).json({ sucesso: false, mensagem: "Token não enviado" });
+    return null;
   }
-
-  if (!body || Object.keys(body).length === 0) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "Body vazio ou inválido",
-    });
-  }
-
-  try {
-    await atualizarClienteService(id, body);
-
-    return res.status(204).send();
-  } catch (error) {
-    return res.status(error.status || 500).json({
-      sucesso: false,
-      mensagem: error.mensagem || "Erro interno no BFF",
-    });
-  }
+  return token;
 };
 
 export const cadastroController = async (req, res) => {
@@ -58,7 +39,9 @@ export const cadastroController = async (req, res) => {
     uf
   } = req.body;
 
-  if (!perfilUsuario ||
+  // Validação dos campos obrigatórios
+  if (
+    !perfilUsuario ||
     !nome ||
     !email ||
     !senha ||
@@ -74,13 +57,61 @@ export const cadastroController = async (req, res) => {
   ) {
     return res.status(400).json({
       sucesso: false,
-      mensagem: "Todos os campos são obrigatórios"
+      mensagem: "Todos os campos são obrigatórios",
     });
   }
 
   try {
-    const data = await CadastroService(perfilUsuario, nome, email, senha, fotoUsuario, cep, logradouro, complemento, bairro, cidade, numero, uf);
-    res.json({ sucesso: true, ...data });
+    // Monta o payload corretamente
+    const payload = {
+      perfilUsuario,
+      nome,
+      email,
+      senha,
+      fotoUsuario,
+      cep,
+      logradouro,
+      complemento,
+      bairro,
+      cidade,
+      numero,
+      uf,
+    };
+
+    // Chama o service passando o objeto payload
+    const data = await CadastroService(payload);
+
+    // Retorna sucesso
+    res.status(201).json({
+      sucesso: true,
+      ...data,
+    });
+  } catch (error) {
+    console.error("Erro no cadastroController:", error);
+
+    res.status(error.status || 500).json({
+      sucesso: false,
+      mensagem: error.mensagem || "Erro interno no BFF",
+    });
+  }
+};
+
+
+export const atualizarClienteController = async (req, res) => {
+  const { id } = req.params;
+  const body = req.body;
+  const token = verificarToken(req, res);
+  if (!token) return;
+
+  if (!id)
+    return res.status(400).json({ sucesso: false, mensagem: "ID não fornecido" });
+
+  if (!body || Object.keys(body).length === 0)
+    return res.status(400).json({ sucesso: false, mensagem: "Body vazio ou inválido" });
+
+  try {
+    await atualizarClienteService(id, body, token);
+    res.status(204).send();
   } catch (error) {
     res.status(error.status || 500).json({
       sucesso: false,
@@ -91,25 +122,17 @@ export const cadastroController = async (req, res) => {
 
 export const checkFavoritoController = async (req, res) => {
   const { comercioId } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!comercioId) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "comercioId não fornecido",
-    });
-  }
+  if (!comercioId)
+    return res.status(400).json({ sucesso: false, mensagem: "comercioId não fornecido" });
 
   try {
-    const token = req.headers.authorization;
-
-    const isFavorito = await checkFavoritoService(comercioId, token);
-
-    return res.status(200).json({
-      sucesso: true,
-      favorito: isFavorito,
-    });
+    const favorito = await checkFavoritoService(comercioId, token);
+    res.json({ sucesso: true, favorito });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -118,25 +141,17 @@ export const checkFavoritoController = async (req, res) => {
 
 export const checkProdutoFavoritoController = async (req, res) => {
   const { produtoId } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!produtoId) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "produtoId não fornecido",
-    });
-  }
+  if (!produtoId)
+    return res.status(400).json({ sucesso: false, mensagem: "produtoId não fornecido" });
 
   try {
-    const token = req.headers.authorization;
-
-    const isFavorito = await checkProdutoFavoritoService(produtoId, token);
-
-    return res.status(200).json({
-      sucesso: true,
-      favorito: isFavorito,
-    });
+    const favorito = await checkProdutoFavoritoService(produtoId, token);
+    res.json({ sucesso: true, favorito });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -145,20 +160,17 @@ export const checkProdutoFavoritoController = async (req, res) => {
 
 export const removerClienteController = async (req, res) => {
   const { id } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!id) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "ID não fornecido",
-    });
-  }
+  if (!id)
+    return res.status(400).json({ sucesso: false, mensagem: "ID não fornecido" });
 
   try {
-    await removerClienteService(id);
-
-    return res.status(204).send(); // ✅ NoContent
+    await removerClienteService(id, token);
+    res.status(204).send();
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -167,22 +179,17 @@ export const removerClienteController = async (req, res) => {
 
 export const removerProdutoFavoritoController = async (req, res) => {
   const { produtoId } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!produtoId) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "produtoId não fornecido",
-    });
-  }
+  if (!produtoId)
+    return res.status(400).json({ sucesso: false, mensagem: "produtoId não fornecido" });
 
   try {
-    const token = req.headers.authorization;
-
     await removerProdutoFavoritoService(produtoId, token);
-
-    return res.status(204).send(); // ✅ NoContent
+    res.status(204).send();
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -191,24 +198,17 @@ export const removerProdutoFavoritoController = async (req, res) => {
 
 export const adicionarFavoritoController = async (req, res) => {
   const { comercioId } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!comercioId) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "comercioId não fornecido",
-    });
-  }
+  if (!comercioId)
+    return res.status(400).json({ sucesso: false, mensagem: "comercioId não fornecido" });
 
   try {
-    const token = req.headers.authorization;
     const data = await adicionarFavoritoService(comercioId, token);
-
-    return res.status(200).json({
-      sucesso: true,
-      ...data,
-    });
+    res.json({ sucesso: true, ...data });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -217,25 +217,17 @@ export const adicionarFavoritoController = async (req, res) => {
 
 export const adicionarProdutoFavoritoController = async (req, res) => {
   const { produtoId } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!produtoId) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "produtoId não fornecido",
-    });
-  }
+  if (!produtoId)
+    return res.status(400).json({ sucesso: false, mensagem: "produtoId não fornecido" });
 
   try {
-    const token = req.headers.authorization;
-
     const data = await adicionarProdutoFavoritoService(produtoId, token);
-
-    return res.status(200).json({
-      sucesso: true,
-      ...data,
-    });
+    res.json({ sucesso: true, ...data });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -243,17 +235,14 @@ export const adicionarProdutoFavoritoController = async (req, res) => {
 };
 
 export const listarFavoritosController = async (req, res) => {
+  const token = verificarToken(req, res);
+  if (!token) return;
+
   try {
-    const token = req.headers.authorization;
-
-    const data = await listarFavoritosService(token);
-
-    return res.status(200).json({
-      sucesso: true,
-      favoritos: data,
-    });
+    const favoritos = await listarFavoritosService(token);
+    res.json({ sucesso: true, favoritos });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -261,17 +250,14 @@ export const listarFavoritosController = async (req, res) => {
 };
 
 export const listarProdutosFavoritosController = async (req, res) => {
+  const token = verificarToken(req, res);
+  if (!token) return;
+
   try {
-    const token = req.headers.authorization;
-
-    const data = await listarProdutosFavoritosService(token);
-
-    return res.status(200).json({
-      sucesso: true,
-      favoritos: data,
-    });
+    const favoritos = await listarProdutosFavoritosService(token);
+    res.json({ sucesso: true, favoritos });
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -280,22 +266,17 @@ export const listarProdutosFavoritosController = async (req, res) => {
 
 export const removerFavoritoController = async (req, res) => {
   const { comercioId } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!comercioId) {
-    return res.status(400).json({
-      sucesso: false,
-      mensagem: "comercioId não fornecido",
-    });
-  }
+  if (!comercioId)
+    return res.status(400).json({ sucesso: false, mensagem: "comercioId não fornecido" });
 
   try {
-    const token = req.headers.authorization;
-
     await removerFavoritoService(comercioId, token);
-
-    return res.status(204).send(); // ✅ NoContent
+    res.status(204).send();
   } catch (error) {
-    return res.status(error.status || 500).json({
+    res.status(error.status || 500).json({
       sucesso: false,
       mensagem: error.mensagem || "Erro interno no BFF",
     });
@@ -303,9 +284,11 @@ export const removerFavoritoController = async (req, res) => {
 };
 
 export const allclienteController = async (req, res) => {
+  const token = verificarToken(req, res);
+  if (!token) return;
 
   try {
-    const data = await allclienteService();
+    const data = await allclienteService(token);
     res.json({ sucesso: true, ...data });
   } catch (error) {
     res.status(error.status || 500).json({
@@ -317,13 +300,14 @@ export const allclienteController = async (req, res) => {
 
 export const clienteIDController = async (req, res) => {
   const { id } = req.params;
+  const token = verificarToken(req, res);
+  if (!token) return;
 
-  if (!id) {
+  if (!id)
     return res.status(400).json({ sucesso: false, mensagem: "ID não fornecido" });
-  }
 
   try {
-    const data = await clienteIDService(id);
+    const data = await clienteIDService(id, token);
     res.json({ sucesso: true, ...data });
   } catch (error) {
     res.status(error.status || 500).json({

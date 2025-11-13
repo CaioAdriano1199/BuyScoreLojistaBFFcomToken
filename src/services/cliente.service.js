@@ -2,32 +2,57 @@ import axios from "axios";
 
 const API_URL = process.env.API_CLIENTE_URL || "http://localhost:8081/cliente";
 
-export const atualizarClienteService = async (id, cliente) => {
-  try {
-    await axios.put(`${API_URL}/${id}`, cliente);
-  } catch (error) {
-    console.error("Erro ao chamar API:", error.message);
+const authHeader = (token) => ({
+  Authorization: token?.startsWith("Bearer ") ? token : `Bearer ${token}`,
+  "Content-Type": "application/json",
+});
 
-    throw {
-      status: error.response?.status,
-      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
-    };
-  }
-};
-
+//bff testado
 export const CadastroService = async (payload) => {
   try {
-    const response = await axios.post(API_URL, payload);
+    console.log("📦 Enviando payload para API:", JSON.stringify(payload, null, 2));
+    console.log("🌐 URL da API:", API_URL);
 
-    // Retorna apenas o que o front precisa
+    // Verifica antes de enviar
+    if (!API_URL || typeof API_URL !== "string") {
+      throw new Error("API_URL não configurada corretamente");
+    }
+
+    if (typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("Payload inválido — deve ser um objeto JSON");
+    }
+
+    const response = await axios.post(API_URL, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Resposta da API:", response.data);
+
     return {
       token: response.data.token,
     };
   } catch (error) {
+    console.error("❌ Erro ao chamar API:", error);
+    throw {
+      status: error.response?.status || 500,
+      mensagem: error.response?.data?.mensagem || error.message || "Erro na comunicação com a API",
+    };
+  }
+};
+
+export const atualizarClienteService = async (id, cliente, token) => {
+  try {
+    await axios.put(`${API_URL}/${id}`, cliente, {
+      headers: authHeader(token),
+    });
+  } catch (error) {
     console.error("Erro ao chamar API:", error.message);
     throw {
       status: error.response?.status,
-      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
+      mensagem:
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -36,22 +61,15 @@ export const checkFavoritoService = async (comercioId, token) => {
   try {
     const response = await axios.get(
       `${API_URL}/comercio-favoritos/${comercioId}/check`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: authHeader(token) }
     );
-
     return response.data;
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -60,36 +78,30 @@ export const checkProdutoFavoritoService = async (produtoId, token) => {
   try {
     const response = await axios.get(
       `${API_URL}/produto-favoritos/${produtoId}/check`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: authHeader(token) }
     );
-
-    // espera que a API retorne true ou false
     return response.data;
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
 
-export const removerClienteService = async (id) => {
+export const removerClienteService = async (id, token) => {
   try {
-    await axios.delete(`${API_URL}/${id}`);
+    await axios.delete(`${API_URL}/${id}`, {
+      headers: authHeader(token),
+    });
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
-      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
+      mensagem:
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -97,18 +109,14 @@ export const removerClienteService = async (id) => {
 export const removerProdutoFavoritoService = async (produtoId, token) => {
   try {
     await axios.delete(`${API_URL}/produto-favoritos/${produtoId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeader(token),
     });
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -118,24 +126,17 @@ export const adicionarFavoritoService = async (comercioId, token) => {
     const response = await axios.post(
       `${API_URL}/comercio-favoritos/${comercioId}`,
       {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: authHeader(token) }
     );
-
     return {
       mensagem: response.data?.mensagem || "Favorito adicionado com sucesso",
     };
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -145,24 +146,18 @@ export const adicionarProdutoFavoritoService = async (produtoId, token) => {
     const response = await axios.post(
       `${API_URL}/produto-favoritos/${produtoId}`,
       {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: authHeader(token) }
     );
-
     return {
-      mensagem: response.data?.mensagem || "Produto adicionado aos favoritos",
+      mensagem:
+        response.data?.mensagem || "Produto adicionado aos favoritos",
     };
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -170,20 +165,15 @@ export const adicionarProdutoFavoritoService = async (produtoId, token) => {
 export const listarFavoritosService = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/comercio-favoritos`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeader(token),
     });
-
     return response.data;
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -191,20 +181,15 @@ export const listarFavoritosService = async (token) => {
 export const listarProdutosFavoritosService = async (token) => {
   try {
     const response = await axios.get(`${API_URL}/produto-favoritos`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeader(token),
     });
-
     return response.data;
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
@@ -212,50 +197,46 @@ export const listarProdutosFavoritosService = async (token) => {
 export const removerFavoritoService = async (comercioId, token) => {
   try {
     await axios.delete(`${API_URL}/comercio-favoritos/${comercioId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeader(token),
     });
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
-
     throw {
       status: error.response?.status,
       mensagem:
-        error.response?.data?.mensagem ||
-        "Erro na comunicação com a API",
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
 
-export const allclienteService = async () => {
+export const allclienteService = async (token) => {
   try {
-    const response = await axios.get(API_URL + "/all");
-
-    return {
-      clientes: response.data,
-    };
+    const response = await axios.get(`${API_URL}/all`, {
+      headers: authHeader(token),
+    });
+    return { clientes: response.data };
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
     throw {
       status: error.response?.status,
-      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
+      mensagem:
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
 
-export const clienteIDService = async (id) => {
+export const clienteIDService = async (id, token) => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
-
-    return {
-      usuario: response.data,
-    };
+    const response = await axios.get(`${API_URL}/${id}`, {
+      headers: authHeader(token),
+    });
+    return { usuario: response.data };
   } catch (error) {
     console.error("Erro ao chamar API:", error.message);
     throw {
       status: error.response?.status,
-      mensagem: error.response?.data?.mensagem || "Erro na comunicação com a API",
+      mensagem:
+        error.response?.data?.mensagem || "Erro na comunicação com a API",
     };
   }
 };
