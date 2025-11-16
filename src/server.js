@@ -10,7 +10,6 @@ import comercioRoutes from "./routes/comercio.route.js";
 
 const app = express();
 
-// Middleware de logging para debug
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();

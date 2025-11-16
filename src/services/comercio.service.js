@@ -148,5 +148,41 @@ export const top5MultiplosSetoresService = async (setores, token) => {
   }
 };
 
+export const buscarmeucomercioService = async (token) => {
+  try {
+    const response = await axios.get(API_URL, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+      },
+    });
 
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao carregar suas informações:", error.message);
+    throw {
+      status: error.response?.status || 500,
+      mensagem:
+        error.response?.data?.mensagem ||
+        error.response?.data?.message ||
+        "Erro na comunicação com a API",
+    };
+  }
+};
 
+export const atualizarComercioService = async (token, comercio) => {
+  try {
+    const response = await axios.put("http://localhost:8081/comercio", comercio, {
+      headers: {
+        Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao atualizar o comércio:", error.message);
+    throw {
+      status: error.response?.status || 500,
+      mensagem: error.response?.data?.mensagem || error.response?.data?.message || "Erro na comunicação com a API",
+    };
+  }
+};

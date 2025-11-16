@@ -6,6 +6,8 @@ import {
   top5SetoresPrincipaisService,
   top5CadaSetorService,
   top5MultiplosSetoresService,
+  buscarmeucomercioService,
+  atualizarComercioService
 } from "../services/comercio.service.js";
 
 export const buscarComercioPorIdController = async (req, res) => {
@@ -153,4 +155,72 @@ export const top5MultiplosSetoresController = async (req, res) => {
   }
 };
 
+export const buscarmeucomercioController = async (req, res) => {
+  const token = req.headers.authorization;
 
+  if (!token) {
+    return res.status(401).json({
+      sucesso: false,
+      mensagem: "Token não enviado",
+    });
+  }
+
+  try {
+    const comercio = await buscarmeucomercioService(token);
+
+    return res.status(200).json({
+      sucesso: true,
+      comercio,
+    });
+
+  } catch (error) {
+    console.error("Erro no buscarmeucomercioController:", error);
+
+    const status = error.status || 500;
+
+    if (status === 403) {
+      return res.status(403).json({
+        sucesso: false,
+        mensagem: "Acesso negado. Verifique suas permissões ou token.",
+      });
+    }
+
+    return res.status(status).json({
+      sucesso: false,
+      mensagem: error.mensagem || "Erro interno no BFF",
+    });
+  }
+};
+
+export const atualizarComercioController = async (req, res) => {
+  const token = req.headers.authorization;
+  const comercio = req.body;
+
+  if (!token) {
+    return res.status(401).json({ sucesso: false, mensagem: "Token não enviado" });
+  }
+
+  try {
+    const atualizado = await atualizarComercioService(token, comercio);
+
+    return res.status(200).json({
+      sucesso: true,
+      comercio: atualizado,
+    });
+  } catch (error) {
+    console.error("Erro no atualizarComercioController:", error);
+    const status = error.status || 500;
+
+    if (status === 403) {
+      return res.status(403).json({
+        sucesso: false,
+        mensagem: "Acesso negado. Verifique suas permissões ou token de autenticação.",
+      });
+    }
+
+    return res.status(status).json({
+      sucesso: false,
+      mensagem: error.mensagem || "Erro interno no BFF",
+    });
+  }
+};

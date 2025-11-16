@@ -7,6 +7,8 @@ import {
   top5SetoresPrincipaisController,
     top5CadaSetorController,
     top5MultiplosSetoresController,
+    buscarmeucomercioController,
+    atualizarComercioController
 } from "../controllers/comercio.controller.js";
 
 const router = express.Router();
@@ -14,6 +16,10 @@ const router = express.Router();
 router.get("/:id", buscarComercioPorIdController);
 
 router.post("/", criarComercioController);
+
+router.put("/", atualizarComercioController);
+
+router.get("/", buscarmeucomercioController);
 
 router.get("/all", listarTodosComerciosController);
 
